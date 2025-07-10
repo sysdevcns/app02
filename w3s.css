@@ -1,0 +1,156 @@
+/* Estilo geral inspirado no W3Schools */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    line-height: 1.6;
+    color: #eaff00;
+    background-color: #f4f4f4;
+    margin: 0;
+    padding: 0;
+}
+
+/* Container principal */
+.stApp {
+    background-color: #fdfafa;
+}
+
+/* Cabeçalhos */
+h1, h2, h3, h4, h5, h6 {
+    color: #e210aa;
+    margin-top: 0;
+}
+
+h1 {
+    border-bottom: 2px solid #220afd;
+    padding-bottom: 10px;
+}
+
+/* Sidebar */
+.stSidebar {
+    background-color: #5a5759;
+    color: white;
+    padding: 15px;
+}
+
+.stSidebar .sidebar-content {
+    background-color: #8fe9fa;
+}
+
+.stSidebar .sidebar-title {
+    color: #f07ed0;
+    font-weight: bold;
+}
+
+/* Botões */
+.stButton>button {
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+    margin: 4px 2px;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: background-color 0.3s;
+}
+
+.stButton>button:hover {
+    background-color: #c808f8;
+}
+
+/* Formulários */
+.stTextInput>div>div>input, 
+.stTextArea>div>div>textarea, 
+.stSelectbox>div>div>select {
+    width: 100%;
+    padding: 12px 20px;
+    margin: 8px 0;
+    display: inline-block;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+
+/* Tabelas */
+.stTable {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 25px 0;
+    font-size: 0.9em;
+    min-width: 400px;
+    border-radius: 5px 5px 0 0;
+    overflow: hidden;
+    box-shadow: 0 0 20px rgb(243, 238, 238);
+}
+
+.stTable thead tr {
+    background-color: #3c6cfc;
+    color: #ffffff;
+    text-align: left;
+    font-weight: bold;
+}
+
+.stTable th,
+.stTable td {
+    padding: 12px 15px;
+}
+
+.stTable tbody tr {
+    border-bottom: 1px solid #dddddd;
+}
+
+.stTable tbody tr:nth-of-type(even) {
+    background-color: #f3f3f3;
+}
+
+.stTable tbody tr:last-of-type {
+    border-bottom: 2px solid #4CAF50;
+}
+
+/* Abas */
+.stTabs [role="tablist"] {
+    border-bottom: 1px solid #4CAF50;
+}
+
+.stTabs [role="tab"][aria-selected="true"] {
+    color: #4CAF50;
+    border-bottom: 2px solid #4CAF50;
+}
+
+/* Mensagens */
+.stAlert {
+    padding: 20px;
+    border-radius: 4px;
+    margin-bottom: 15px;
+}
+
+.stAlert.stError {
+    background-color: #ffdddd;
+    border-left: 6px solid #f44336;
+}
+
+.stAlert.stSuccess {
+    background-color: #ddffdd;
+    border-left: 6px solid #4CAF50;
+}
+
+.stAlert.stWarning {
+    background-color: #ffffcc;
+    border-left: 6px solid #ffeb3b;
+}
+
+.stAlert.stInfo {
+    background-color: #e7f3fe;
+    border-left: 6px solid #2196F3;
+}
+
+/* Botão de logout */
+#logout_button {
+    background-color: #4604fa !important;
+}
+
+#logout_button:hover {
+    background-color: #d32f2f !important;
+}
