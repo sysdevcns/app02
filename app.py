@@ -5,6 +5,7 @@ import streamlit as st
 from datetime import datetime, timedelta
 from extra_streamlit_components import CookieManager
 
+port = int(os.environ.get("PORT", 8501))
 
 # 1. PRIMEIRO: Configuração da página (DEVE ser o primeiro comando Streamlit)
 st.set_page_config(
