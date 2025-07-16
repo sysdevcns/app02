@@ -2,8 +2,6 @@
   "build": {
     "builder": "nixpacks",
     "preBuild": "apt-get update && apt-get install -y unixodbc unixodbc-dev freetds-dev tdsodbc",
-    "installCommand": "pip install --no-cache-dir -r requirements.txt",
-    "startCommand": "run app"
-
+    "installCommand": "pip install --no-cache-dir -r requirements.txt"
   }
 }
