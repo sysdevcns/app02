@@ -1,9 +1,10 @@
 # pip install extra-streamlit-components
-
+import os
 import pyodbc
 import streamlit as st
 from datetime import datetime, timedelta
 from extra_streamlit_components import CookieManager
+
 
 # 1. PRIMEIRO: Configuração da página (DEVE ser o primeiro comando Streamlit)
 st.set_page_config(
@@ -34,11 +35,11 @@ def load_css():
 def get_db_connection():
     try:
         conn = pyodbc.connect(
-            'DRIVER={ODBC Driver 17 for SQL Server};'
-            'SERVER=192.168.0.10;'
-            'DATABASE=DB_DEV;'
-            'UID=CTRL;'
-            'PWD=Cury@CA2kV4*!'
+            f"DRIVER={{ODBC Driver 17 for SQL Server}};"
+            f"SERVER={os.getenv('DB_SERVER')},{os.getenv('DB_PORT', '1433')};"
+            f"DATABASE={os.getenv('DB_NAME')};"
+            f"UID={os.getenv('DB_USER')};"
+            f"PWD={os.getenv('DB_PASSWORD')}"
         )
         return conn
     except Exception as e:
