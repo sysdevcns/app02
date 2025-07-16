@@ -1,9 +1,7 @@
-
-#!/bin/bash
-set -e  # Sai imediatamente se algum comando falhar
-
 #!/bin/bash
 echo "Instalando dependências do sistema para pyodbc..."
+
+set -e  # Sai imediatamente se algum comando falhar
 
 # Atualiza os pacotes e instala dependências necessárias
 apt-get update && apt-get install -y \
