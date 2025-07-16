@@ -5,4 +5,4 @@ if [ -f ./setup.sh ]; then
 fi
 
 # Inicia a aplicação Streamlit
-streamlit run seu_app.py
+#streamlit run seu_app.py
