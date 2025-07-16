@@ -1,7 +1,7 @@
 {
   "build": {
     "builder": "nixpacks",
-    "preBuild": "apt-get update && apt-get install -y unixodbc unixodbc-dev freetds-dev tdsodbc && cp odbc_config.ini /etc/odbcinst.ini",
-    "installCommand": "pip install -r requirements.txt"
+    "preBuild": "apt-get update && apt-get install -y unixodbc unixodbc-dev freetds-dev tdsodbc",
+    "installCommand": "pip install --no-cache-dir -r requirements.txt"
   }
 }
