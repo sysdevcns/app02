@@ -1,5 +1,5 @@
 import os
-import psycopg
+import psycopg2
 import streamlit as st
 from datetime import datetime, timedelta
 from extra_streamlit_components import CookieManager
@@ -38,7 +38,7 @@ def get_db_connection():
         return None
     try:
         url = urlparse(db_url)
-        conn = psycopg.connect(
+        conn = psycopg2.connect(
             host=url.hostname,
             port=url.port,
             database=url.path[1:],
