@@ -125,9 +125,15 @@ def logout():
             cookie_manager.delete('auth')
     except:
         pass
+    
+    # Limpeza completa da sessão
     st.session_state.clear()
-    st.session_state['authenticated'] = False  # Garante que o estado seja limpo
-    st.experimental_rerun()  # Em vez de rerun()
+    
+    # Solução universal para rerun
+    if hasattr(st, 'experimental_rerun'):
+        st.experimental_rerun()
+    else:
+        st.rerun()
 
 
 # 9. Menu Principal
@@ -139,7 +145,7 @@ def main_menu():
     
     # Botão de logout sem callback imediato
     if st.sidebar.button("Logout"):
-        logout()  # Chama a função diretamente
+        logout()  # Chama a função, forçar o rerun
     
     menu = {
         "Dashboard": dashboard_page,
@@ -320,14 +326,11 @@ def configuracoes_page(): st.write("Configurações")
 # 11. Script de inicialização
 def main():
     load_css()
-    
-    # Verifica autenticação
-    is_authenticated = check_authentication()
-    
-    if is_authenticated:
-        main_menu()
-    else:
+    # Checar a sessão
+    if not st.session_state.get('authenticated', False):
         login_page()
+        return
+    main_menu()
 
 
 
