@@ -1,9 +1,12 @@
 import os
 import psycopg
 import streamlit as st
+import pandas as pd
+
 from datetime import datetime, timedelta
 from extra_streamlit_components import CookieManager
 from urllib.parse import urlparse
+
 
 # 1. PRIMEIRO: Configuração da página (DEVE ser o primeiro comando Streamlit)
 st.set_page_config(
@@ -12,8 +15,10 @@ st.set_page_config(
     layout="wide"
 )
 
+
 # 2. Inicializa o gerenciador de cookies APÓS set_page_config()
 cookie_manager = CookieManager(key='auth_manager')
+
 
 # Configuração do CSS externo
 def load_css():
@@ -29,6 +34,7 @@ def load_css():
         </style>
         """
         st.markdown(w3schools_css, unsafe_allow_html=True)
+
 
 # Conexão Postgre
 def get_db_connection():
@@ -52,45 +58,27 @@ def get_db_connection():
 
 
 # Autenticação
-def check_authentication():
-    # Inicializa o estado de autenticação se não existir
-    if 'authenticated' not in st.session_state:
-        st.session_state['authenticated'] = False
-        st.session_state['last_activity'] = datetime.now()
-    
-    # Verifica o cookie de autenticação
-    auth_cookie = cookie_manager.get('auth')
-    
-    # Se tem cookie válido e sessão ativa
-    if auth_cookie and st.session_state['authenticated']:
-        # Verifica se a sessão expirou (5 minutos de inatividade)
-        if (datetime.now() - st.session_state['last_activity']) < timedelta(minutes=5):
-            # Atualiza o tempo da última atividade
-            st.session_state['last_activity'] = datetime.now()
-            return True
-        else:
-            # Sessão expirada
-            st.session_state['authenticated'] = False
-            cookie_manager.delete('auth')
-            return False
-    
-    # Se tem cookie mas não está autenticado na sessão
-    elif auth_cookie and not st.session_state['authenticated']:
+def authenticate_user(username, password):
+    """Autentica usuário sem diferenciar maiúsculas/minúsculas"""
+    conn = get_db_connection()
+    if conn:
         try:
-            # Verifica se o cookie ainda é válido
-            st.session_state['authenticated'] = True
-            st.session_state['username'] = auth_cookie['username']
-            st.session_state['last_activity'] = datetime.now()
-            return True
-        except:
+            with conn.cursor() as cursor:
+                cursor.execute(
+                    "SELECT * FROM Users WHERE LOWER(Username) = LOWER(%s) AND Password = %s", 
+                    (username, password)
+                return cursor.fetchone() is not None
+        except Exception as e:
+            st.error(f"Erro ao autenticar: {e}")
             return False
-    
+        finally:
+            conn.close()
     return False
 
 
-
-# Verificação de autenticação
+# Validação
 def check_authentication():
+    """Verifica se o usuário está autenticado"""
     if 'authenticated' not in st.session_state:
         st.session_state['authenticated'] = False
     
@@ -98,6 +86,7 @@ def check_authentication():
     if auth_cookie:
         st.session_state['authenticated'] = True
         st.session_state['username'] = auth_cookie['username']
+
 
 # Página de Login
 def login_page():
@@ -107,17 +96,14 @@ def login_page():
         password = st.text_input("Senha", type="password")
         
         if st.form_submit_button("Login"):
-            if authenticate_user(username, password):
-                # Cookie expira em 5 minutos (300 segundos)
+            if authenticate_user(username, password):  # Agora a função está definida
                 cookie_manager.set(
                     'auth',
                     {'username': username},
-                    expires_at=datetime.now() + timedelta(minutes=5)
-                )
+                    expires_at=datetime.now() + timedelta(days=1))
                 st.session_state.update({
                     'authenticated': True,
-                    'username': username,
-                    'last_activity': datetime.now()
+                    'username': username
                 })
                 st.rerun()
             else:
