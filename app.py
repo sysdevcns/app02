@@ -1,3 +1,4 @@
+# 0. Dependencias
 import os
 import psycopg
 import streamlit as st
@@ -8,7 +9,7 @@ from extra_streamlit_components import CookieManager
 from urllib.parse import urlparse
 
 
-# 1. PRIMEIRO: Configuração da página (DEVE ser o primeiro comando Streamlit)
+# 1. Configuração da página
 st.set_page_config(
     page_title="Gestão e Controle",
     page_icon=":gear:",
@@ -16,11 +17,11 @@ st.set_page_config(
 )
 
 
-# 2. Inicializa o gerenciador de cookies APÓS set_page_config()
+# 2. Inicializa o gerenciador de cookies
 cookie_manager = CookieManager(key='auth_manager')
 
 
-# Configuração do CSS externo
+# 3. Configuração do CSS externo
 def load_css():
     try:
         with open("w3s.css") as f:
@@ -36,7 +37,7 @@ def load_css():
         st.markdown(w3schools_css, unsafe_allow_html=True)
 
 
-# Conexão Postgre
+# 4. Conexão com BD Postgre
 def get_db_connection():
     db_url = os.getenv('DATABASE_URL')
     if not db_url:
@@ -57,7 +58,7 @@ def get_db_connection():
         return None
 
 
-# Autenticação
+# 5. Autenticação de usuário
 def authenticate_user(username, password):
     """Autentica usuário sem diferenciar maiúsculas/minúsculas"""
     conn = get_db_connection()
@@ -76,7 +77,7 @@ def authenticate_user(username, password):
     return False
 
 
-# Validação
+# 6. Validação de sessão
 def check_authentication():
     """Verifica se o usuário está autenticado"""
     if 'authenticated' not in st.session_state:
@@ -88,7 +89,7 @@ def check_authentication():
         st.session_state['username'] = auth_cookie['username']
 
 
-# Página de Login
+# 7. Página de Login
 def login_page():
     st.title("Sistema de Controle - Login")
     with st.form("login_form"):
@@ -109,7 +110,7 @@ def login_page():
             else:
                 st.error("Credenciais inválidas")
 
-# Logout
+# 8. Realizar logout
 def logout():
     try:
         if cookie_manager.get('auth'):
@@ -121,7 +122,7 @@ def logout():
     st.session_state['last_activity'] = datetime.now() - timedelta(days=1)  # Força expiração
     st.rerun()
 
-# Menu Principal
+# 9. Menu Principal
 def main_menu():
     # Registra atividade a cada interação
     st.session_state['last_activity'] = datetime.now()
@@ -140,7 +141,7 @@ def main_menu():
     selected = st.sidebar.radio("Menu", list(menu.keys()))
     menu[selected]()
 
-# Páginas de conteúdo (implemente conforme necessário)
+# 10. Páginas de conteúdo
 def dashboard_page(): st.write("Dashboard")
 #def processos_page(): st.write("Processos")
 def itens_page(): st.write("Itens")
@@ -276,7 +277,7 @@ def processos_page():
 
 
 
-# Função principal
+# 11. Script de inicialização
 def main():
     load_css()
     
