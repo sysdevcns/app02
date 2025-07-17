@@ -1,11 +1,14 @@
 # pip install extra-streamlit-components
 import os
-import pyodbc
+#import pyodbc
+import psycopg2
 import streamlit as st
 from datetime import datetime, timedelta
 from extra_streamlit_components import CookieManager
+from urllib.parse import urlparse
 
-port = int(os.environ.get("PORT", 8501))
+
+#port = int(os.environ.get("PORT", 8501))
 
 # 1. PRIMEIRO: Configuração da página (DEVE ser o primeiro comando Streamlit)
 st.set_page_config(
@@ -32,8 +35,30 @@ def load_css():
         """
         st.markdown(w3schools_css, unsafe_allow_html=True)
 
-# Conexão com o SQL Server
+
 def get_db_connection():
+    db_url = os.getenv('DATABASE_URL')  # URL no formato: postgresql://user:pass@host:port/db
+    if not db_url:
+        st.error("Variável DATABASE_URL não encontrada!")
+        return None
+
+    try:
+        url = urlparse(db_url)
+        conn = psycopg2.connect(
+            host=url.hostname,
+            port=url.port,
+            database=url.path[1:],  # Remove a barra inicial (ex: "/mydb" -> "mydb")
+            user=url.username,
+            password=url.password
+        )
+        return conn
+    except Exception as e:
+        st.error(f"Erro ao conectar: {e}")
+        return None
+
+
+# Conexão com o SQL Server
+def get_db_connection2():
     try:
         conn = pyodbc.connect(
             f"DRIVER={{ODBC Driver 17 for SQL Server}};"
