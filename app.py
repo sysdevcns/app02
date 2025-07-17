@@ -102,7 +102,10 @@ def login_page():
 
 # Logout
 def logout():
-    cookie_manager.delete('auth')
+    # Verifica se o cookie existe antes de tentar deletar
+    if cookie_manager.get('auth'):
+        cookie_manager.delete('auth')
+    # Limpa a sessão independentemente do cookie
     st.session_state.clear()
     st.rerun()
 
