@@ -1,13 +1,9 @@
-# pip install extra-streamlit-components
 import os
 import psycopg2
 import streamlit as st
 from datetime import datetime, timedelta
 from extra_streamlit_components import CookieManager
 from urllib.parse import urlparse
-
-
-#port = int(os.environ.get("PORT", 8501))
 
 # 1. PRIMEIRO: Configuração da página (DEVE ser o primeiro comando Streamlit)
 st.set_page_config(
@@ -158,5 +154,3 @@ def main():
 if __name__ == "__main__":
     # 4. Ponto de entrada principal
     main()
-
-#streamlit run app.py
