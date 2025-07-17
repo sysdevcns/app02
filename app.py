@@ -67,7 +67,7 @@ def authenticate_user(username, password):
             with conn.cursor() as cursor:
                 cursor.execute(
                     "SELECT * FROM Users WHERE LOWER(Username) = LOWER(%s) AND Password = %s", 
-                    (username, password)
+                    (username, password))  # Fechando ambos os parênteses aqui
                 return cursor.fetchone() is not None
         except Exception as e:
             st.error(f"Erro ao autenticar: {e}")
@@ -91,7 +91,7 @@ def check_authentication():
 
 # 7. Página de Login
 def login_page():
-    st.title("Sistema de Controle - Login")
+    st.title("Login")
     with st.form("login_form"):
         username = st.text_input("Usuário")
         password = st.text_input("Senha", type="password")
@@ -292,5 +292,5 @@ def main():
 
 
 if __name__ == "__main__":
-    # 4. Ponto de entrada principal
+    # Ponto de partida
     main()
