@@ -7,7 +7,7 @@ from urllib.parse import urlparse
 
 # 1. PRIMEIRO: Configuração da página (DEVE ser o primeiro comando Streamlit)
 st.set_page_config(
-    page_title="Sistema de Controle",
+    page_title="Gestão e Controle",
     page_icon=":gear:",
     layout="wide"
 )
@@ -102,12 +102,10 @@ def login_page():
 
 # Logout
 def logout():
-    # Verifica se o cookie existe antes de tentar deletar
     if cookie_manager.get('auth'):
         cookie_manager.delete('auth')
-    # Limpa a sessão independentemente do cookie
     st.session_state.clear()
-    st.rerun()
+    st.experimental_rerun()
 
 # Menu Principal
 def main_menu():
