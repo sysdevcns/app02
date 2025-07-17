@@ -1,12 +1,12 @@
 # 0. Dependencias
 import os
 import psycopg
-import streamlit as st
 import pandas as pd
+import streamlit as st
 
+from urllib.parse import urlparse
 from datetime import datetime, timedelta
 from extra_streamlit_components import CookieManager
-from urllib.parse import urlparse
 
 
 # 1. Configuração da página
@@ -67,8 +67,10 @@ def authenticate_user(username, password):
             with conn.cursor() as cursor:
                 cursor.execute(
                     "SELECT * FROM Users WHERE LOWER(Username) = LOWER(%s) AND Password = %s", 
-                    (username, password))  # Fechando ambos os parênteses aqui
-                return cursor.fetchone() is not None
+                    (username, password))
+                result = cursor.fetchone() is not None
+                st.write(f"Resultado da autenticação: {result}")  # Debug
+                return result
         except Exception as e:
             st.error(f"Erro ao autenticar: {e}")
             return False
@@ -87,17 +89,21 @@ def check_authentication():
     if auth_cookie:
         st.session_state['authenticated'] = True
         st.session_state['username'] = auth_cookie['username']
-
+    
+    return st.session_state['authenticated']
+    
 
 # 7. Página de Login
 def login_page():
-    st.title("Login")
+    st.title("Sistema de Controle - Login")
     with st.form("login_form"):
         username = st.text_input("Usuário")
         password = st.text_input("Senha", type="password")
         
         if st.form_submit_button("Login"):
-            if authenticate_user(username, password):  # Agora a função está definida
+            st.write("Botão login pressionado")  # Debug
+            if authenticate_user(username, password):
+                st.write("Autenticação bem-sucedida")  # Debug
                 cookie_manager.set(
                     'auth',
                     {'username': username},
@@ -106,9 +112,11 @@ def login_page():
                     'authenticated': True,
                     'username': username
                 })
+                st.write("Session state atualizado, redirecionando...")  # Debug
                 st.rerun()
             else:
                 st.error("Credenciais inválidas")
+                
 
 # 8. Realizar logout
 def logout():
