@@ -102,15 +102,28 @@ def login_page():
 
 # Logout
 def logout():
-    if cookie_manager.get('auth'):
-        cookie_manager.delete('auth')
+    """Função de logout segura que evita problemas com rerun"""
+    try:
+        # Limpa os cookies
+        if cookie_manager.get('auth'):
+            cookie_manager.delete('auth')
+    except Exception as e:
+        st.warning(f"Erro ao limpar cookies: {str(e)}")
+    
+    # Marca para redirecionar para login
     st.session_state.clear()
-    st.experimental_rerun()
+    st.session_state['redirect_to_login'] = True
 
 # Menu Principal
 def main_menu():
-    st.title(f"Bem-vindo, {st.session_state['username']}!")
+    # Botão de logout (mantém o mesmo)
     st.sidebar.button("Logout", on_click=logout)
+    
+    # Restante da sua lógica de menu...
+    if st.session_state.get('redirect_to_login'):
+        return  # Sai da função se logout foi acionado
+    
+    st.title(f"Bem-vindo, {st.session_state['username']}!")
     
     menu = {
         "Dashboard": dashboard_page,
@@ -133,14 +146,12 @@ def configuracoes_page(): st.write("Configurações")
 # Função principal
 def main():
     load_css()
-    
-    # Verifica se logout foi acionado
-    if st.session_state.get('logout_triggered'):
-        st.session_state.pop('logout_triggered', None)
-        st.rerun()
-    
-    check_authentication()
-    
+    # Verifica redirecionamento de logout
+    if st.session_state.get('redirect_to_login', False):
+        st.session_state.pop('redirect_to_login', None)
+        login_page()
+        return  # Importante para evitar execução dupla
+    check_authentication()    
     if st.session_state.get('authenticated'):
         main_menu()
     else:
