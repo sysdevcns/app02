@@ -125,28 +125,23 @@ def login_page():
 
 # Logout
 def logout():
-    """Função de logout segura que evita problemas com rerun"""
     try:
-        # Limpa os cookies
         if cookie_manager.get('auth'):
             cookie_manager.delete('auth')
-    except Exception as e:
-        st.warning(f"Erro ao limpar cookies: {str(e)}")
+    except:
+        pass
     
-    # Marca para redirecionar para login
     st.session_state.clear()
-    st.session_state['redirect_to_login'] = True
+    st.session_state['last_activity'] = datetime.now() - timedelta(days=1)  # Força expiração
+    st.rerun()
 
 # Menu Principal
 def main_menu():
-    # Botão de logout (mantém o mesmo)
-    st.sidebar.button("Logout", on_click=logout)
-    
-    # Restante da sua lógica de menu...
-    if st.session_state.get('redirect_to_login'):
-        return  # Sai da função se logout foi acionado
+    # Registra atividade a cada interação
+    st.session_state['last_activity'] = datetime.now()
     
     st.title(f"Bem-vindo, {st.session_state['username']}!")
+    st.sidebar.button("Logout", on_click=logout)
     
     menu = {
         "Dashboard": dashboard_page,
