@@ -167,7 +167,8 @@ def dashboard_page(): st.write("Dashboard")
 
 # 10B. Páginas de conteúdo
 def processos_page():
-    st.title("📋 Gestão de Processos")
+    st.write("📋 Gestão de Processos")
+    #st.title("📋 Gestão de Processos")
     
     # Inicializa a session_state
     if 'show_processo_modal' not in st.session_state:
@@ -214,7 +215,7 @@ def processos_page():
                     
                     # Adiciona botões de ação para cada linha
                     for idx, processo in enumerate(processos):
-                        cols = st.columns([1]*len(df.columns)  # Cria uma coluna para cada coluna do DF
+                        cols = st.columns([1]*len(df.columns))  # Cria uma coluna para cada coluna do DF
                         
                         # Preenche as colunas com os dados
                         for i, col in enumerate(df.columns[:-1]):  # Exceto a coluna de ações
