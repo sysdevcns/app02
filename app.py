@@ -174,7 +174,9 @@ def processos_page():
         st.session_state['show_processo_modal'] = False
     if 'current_processo' not in st.session_state:
         st.session_state['current_processo'] = None
-    
+    if 'show_delete_modal' not in st.session_state:
+        st.session_state['show_delete_modal'] = False
+
     # Carrega os processos do banco de dados
     conn = get_db_connection()
     if conn:
@@ -188,64 +190,70 @@ def processos_page():
                     df = pd.DataFrame(processos, columns=[desc[0] for desc in cursor.description])
                     
                     # Adiciona coluna de ações
-                    df['Ações'] = "✏️ Editar | 🗑️ Excluir"
+                    df['Ações'] = ""
+                    
+                    # Configuração das colunas para o data_editor
+                    column_config = {
+                        col: {"width": "medium"} for col in df.columns
+                    }
+                    column_config["Ações"] = st.column_config.Column(
+                        "Ações",
+                        width="small",
+                        disabled=True
+                    )
                     
                     # Exibe o DataFrame com os botões
-                    edited_df = st.data_editor(
+                    st.data_editor(
                         df,
-                        column_config={
-                            "Ações": st.column_config.Column(
-                                "Ações",
-                                help="Clique nos botões para editar ou excluir",
-                                width="medium"
-                            )
-                        },
+                        column_config=column_config,
                         hide_index=True,
                         use_container_width=True,
-                        height=400
+                        height=400,
+                        key="processos_table"
                     )
+                    
+                    # Adiciona botões de ação para cada linha
+                    for idx, processo in enumerate(processos):
+                        cols = st.columns([1]*len(df.columns)  # Cria uma coluna para cada coluna do DF
+                        
+                        # Preenche as colunas com os dados
+                        for i, col in enumerate(df.columns[:-1]):  # Exceto a coluna de ações
+                            with cols[i]:
+                                st.text(str(processo[i]))
+                        
+                        # Coluna de ações
+                        with cols[-1]:
+                            col1, col2 = st.columns(2)
+                            with col1:
+                                if st.button("✏️", key=f"edit_{processo[0]}"):
+                                    st.session_state['show_processo_modal'] = True
+                                    st.session_state['current_processo'] = {
+                                        'ProcessoID': processo[0],
+                                        'NumeroProcesso': processo[1],
+                                        'Titulo': processo[2],
+                                        'Descricao': processo[3],
+                                        'Status': processo[4],
+                                        'DataInicio': processo[5],
+                                        'DataFim': processo[6]
+                                    }
+                            with col2:
+                                if st.button("🗑️", key=f"del_{processo[0]}"):
+                                    st.session_state['show_delete_modal'] = True
+                                    st.session_state['processo_to_delete'] = processo[0]
+                                    st.session_state['processo_numero'] = processo[1]
                     
                     # Botão para adicionar novo processo
                     if st.button("➕ Adicionar Processo"):
                         st.session_state['show_processo_modal'] = True
                         st.session_state['current_processo'] = None
-                        st.rerun()
-                    
-                    # Verifica interações com os botões
-                    if edited_df is not None:
-                        for idx, row in edited_df.iterrows():
-                            if "✏️ Editar" in row['Ações']:
-                                processo = processos[idx]
-                                st.session_state['show_processo_modal'] = True
-                                st.session_state['current_processo'] = {
-                                    'ProcessoID': processo[0],
-                                    'NumeroProcesso': processo[1],
-                                    'Titulo': processo[2],
-                                    'Descricao': processo[3],
-                                    'Status': processo[4],
-                                    'DataInicio': processo[5],
-                                    'DataFim': processo[6]
-                                }
-                                st.rerun()
-                            
-                            if "🗑️ Excluir" in row['Ações']:
-                                processo = processos[idx]
-                                try:
-                                    cursor.execute("DELETE FROM Processos WHERE ProcessoID = %s", (processo[0],))
-                                    conn.commit()
-                                    st.success(f"Processo {processo[1]} excluído!")
-                                    st.rerun()
-                                except Exception as e:
-                                    st.error(f"Erro ao excluir: {e}")
                 
                 else:
                     st.info("Nenhum processo cadastrado ainda.")
                     if st.button("➕ Adicionar Processo"):
                         st.session_state['show_processo_modal'] = True
                         st.session_state['current_processo'] = None
-                        st.rerun()
 
-                # Modal para edição/criação (mantido igual)
+                # Modal para edição/criação
                 if st.session_state['show_processo_modal']:
                     with st.form(key='processo_form'):
                         st.subheader("📝 Editar Processo" if st.session_state['current_processo'] else "🆕 Novo Processo")
@@ -305,11 +313,29 @@ def processos_page():
                             st.session_state['show_processo_modal'] = False
                             st.rerun()
                 
+                # Modal para exclusão
+                if st.session_state['show_delete_modal']:
+                    st.warning(f"Tem certeza que deseja excluir o processo {st.session_state['processo_numero']}?")
+                    col1, col2 = st.columns(2)
+                    with col1:
+                        if st.button("✅ Confirmar"):
+                            try:
+                                cursor.execute("DELETE FROM Processos WHERE ProcessoID = %s", 
+                                             (st.session_state['processo_to_delete'],))
+                                conn.commit()
+                                st.success("Processo excluído com sucesso!")
+                                st.session_state['show_delete_modal'] = False
+                                st.rerun()
+                            except Exception as e:
+                                st.error(f"Erro ao excluir: {e}")
+                    with col2:
+                        if st.button("❌ Cancelar"):
+                            st.session_state['show_delete_modal'] = False
+                
         except Exception as e:
             st.error(f"Erro ao carregar processos: {e}")
         finally:
             conn.close()
-            
 
 # 10C. Páginas de conteúdo
 def itens_page(): st.write("Itens")
