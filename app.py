@@ -80,7 +80,7 @@ def check_authentication():
 
 # Página de Login
 def login_page():
-    st.title("Sistema de Controle - Login")
+    st.title("Login")
     with st.form("login_form"):
         username = st.text_input("Usuário")
         password = st.text_input("Senha", type="password")
@@ -133,17 +133,12 @@ def configuracoes_page(): st.write("Configurações")
 # Função principal
 def main():
     load_css()
-    check_authentication()
     
-    if st.session_state.get('authenticated'):
-        main_menu()
-    else:
-        login_page()
-
-
-def main():
-    # 3. Carrega CSS e verifica autenticação
-    load_css()
+    # Verifica se logout foi acionado
+    if st.session_state.get('logout_triggered'):
+        st.session_state.pop('logout_triggered', None)
+        st.rerun()
+    
     check_authentication()
     
     if st.session_state.get('authenticated'):
