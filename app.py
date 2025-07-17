@@ -95,7 +95,7 @@ def check_authentication():
 
 # 7. Página de Login
 def login_page():
-    st.title("Sistema de Informações Gerenciais - Login")
+    st.title("LOGIN - Sistema de Informações Gerenciais")
     with st.form("login_form"):
         username = st.text_input("Usuário")
         password = st.text_input("Senha", type="password")
@@ -125,10 +125,10 @@ def logout():
             cookie_manager.delete('auth')
     except:
         pass
-    
     st.session_state.clear()
-    st.session_state['last_activity'] = datetime.now() - timedelta(days=1)  # Força expiração
-    st.rerun()
+    st.session_state['authenticated'] = False  # Garante que o estado seja limpo
+    st.experimental_rerun()  # Em vez de rerun()
+
 
 # 9. Menu Principal
 def main_menu():
@@ -136,7 +136,10 @@ def main_menu():
     st.session_state['last_activity'] = datetime.now()
     
     st.title(f"Bem-vindo, {st.session_state['username']}!")
-    st.sidebar.button("Logout", on_click=logout)
+    
+    # Botão de logout sem callback imediato
+    if st.sidebar.button("Logout"):
+        logout()  # Chama a função diretamente
     
     menu = {
         "Dashboard": dashboard_page,
@@ -150,17 +153,17 @@ def main_menu():
     menu[selected]()
 
 # 10. Páginas de conteúdo
+
+
+# 10A. Páginas de conteúdo
 def dashboard_page(): st.write("Dashboard")
-#def processos_page(): st.write("Processos")
-def itens_page(): st.write("Itens")
-def relatorios_page(): st.write("Relatórios")
-def configuracoes_page(): st.write("Configurações")
+    
 
-
+# 10B. Páginas de conteúdo
 def processos_page():
     st.title("📋 Gestão de Processos")
     
-    # Inicializa a session_state se necessário
+    # Inicializa a session_state
     if 'show_processo_modal' not in st.session_state:
         st.session_state['show_processo_modal'] = False
     if 'current_processo' not in st.session_state:
@@ -174,15 +177,27 @@ def processos_page():
                 cursor.execute("SELECT * FROM Processos ORDER BY DataInicio DESC")
                 processos = cursor.fetchall()
                 
-                # Exibe como dataframe
                 if processos:
+                    # Cria DataFrame
                     df = pd.DataFrame(processos, columns=[desc[0] for desc in cursor.description])
                     
                     # Adiciona coluna de ações
-                    df['Ações'] = "🔽"  # Ícone placeholder
+                    df['Ações'] = "✏️ Editar | 🗑️ Excluir"
                     
-                    # Exibe o dataframe
-                    st.dataframe(df, use_container_width=True, height=400)
+                    # Exibe o DataFrame com os botões
+                    edited_df = st.data_editor(
+                        df,
+                        column_config={
+                            "Ações": st.column_config.Column(
+                                "Ações",
+                                help="Clique nos botões para editar ou excluir",
+                                width="medium"
+                            )
+                        },
+                        hide_index=True,
+                        use_container_width=True,
+                        height=400
+                    )
                     
                     # Botão para adicionar novo processo
                     if st.button("➕ Adicionar Processo"):
@@ -190,13 +205,11 @@ def processos_page():
                         st.session_state['current_processo'] = None
                         st.rerun()
                     
-                    # Cria colunas para os botões de ação (agora dentro de um expander para cada linha)
-                    for idx, processo in enumerate(processos):
-                        col1, col2, col3 = st.columns([0.8, 0.1, 0.1])
-                        with col1:
-                            st.write(f"**{processo[1]}** - {processo[2]}")
-                        with col2:
-                            if st.button(f"✏️", key=f"edit_{processo[0]}"):
+                    # Verifica interações com os botões
+                    if edited_df is not None:
+                        for idx, row in edited_df.iterrows():
+                            if "✏️ Editar" in row['Ações']:
+                                processo = processos[idx]
                                 st.session_state['show_processo_modal'] = True
                                 st.session_state['current_processo'] = {
                                     'ProcessoID': processo[0],
@@ -208,8 +221,9 @@ def processos_page():
                                     'DataFim': processo[6]
                                 }
                                 st.rerun()
-                        with col3:
-                            if st.button(f"🗑️", key=f"del_{processo[0]}"):
+                            
+                            if "🗑️ Excluir" in row['Ações']:
+                                processo = processos[idx]
                                 try:
                                     cursor.execute("DELETE FROM Processos WHERE ProcessoID = %s", (processo[0],))
                                     conn.commit()
@@ -289,7 +303,18 @@ def processos_page():
             st.error(f"Erro ao carregar processos: {e}")
         finally:
             conn.close()
+            
 
+# 10C. Páginas de conteúdo
+def itens_page(): st.write("Itens")
+    
+
+# 10D. Páginas de conteúdo
+def relatorios_page(): st.write("Relatórios")
+    
+
+# 10E. Páginas de conteúdo
+def configuracoes_page(): st.write("Configurações")
 
 
 # 11. Script de inicialização
