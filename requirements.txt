@@ -2,7 +2,7 @@
 streamlit==1.44.1
 
 # Banco de dados
-psycopg==3.1.18
+psycopg[binary]==3.1.18
 
 # Componentes extras
 extra-streamlit-components==0.1.80
