@@ -1,5 +1,5 @@
 import os
-import psycopg2
+import psycopg
 import streamlit as st
 from datetime import datetime, timedelta
 from extra_streamlit_components import CookieManager
@@ -36,10 +36,9 @@ def get_db_connection():
     if not db_url:
         st.error("Variável DATABASE_URL não encontrada!")
         return None
-
     try:
         url = urlparse(db_url)
-        conn = psycopg2.connect(
+        conn = psycopg.connect(
             host=url.hostname,
             port=url.port,
             database=url.path[1:],
