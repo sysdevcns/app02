@@ -52,22 +52,42 @@ def get_db_connection():
 
 
 # Autenticação
-def authenticate_user(username, password):
-    """Autentica usuário sem diferenciar maiúsculas/minúsculas no username"""
-    conn = get_db_connection()
-    if conn:
+def check_authentication():
+    # Inicializa o estado de autenticação se não existir
+    if 'authenticated' not in st.session_state:
+        st.session_state['authenticated'] = False
+        st.session_state['last_activity'] = datetime.now()
+    
+    # Verifica o cookie de autenticação
+    auth_cookie = cookie_manager.get('auth')
+    
+    # Se tem cookie válido e sessão ativa
+    if auth_cookie and st.session_state['authenticated']:
+        # Verifica se a sessão expirou (5 minutos de inatividade)
+        if (datetime.now() - st.session_state['last_activity']) < timedelta(minutes=5):
+            # Atualiza o tempo da última atividade
+            st.session_state['last_activity'] = datetime.now()
+            return True
+        else:
+            # Sessão expirada
+            st.session_state['authenticated'] = False
+            cookie_manager.delete('auth')
+            return False
+    
+    # Se tem cookie mas não está autenticado na sessão
+    elif auth_cookie and not st.session_state['authenticated']:
         try:
-            cursor = conn.cursor()
-            cursor.execute(
-                "SELECT * FROM Users WHERE LOWER(TRIM(Username)) = LOWER(TRIM(%s)) AND Password = %s", 
-                (username, password)
-            )
-            return cursor.fetchone() is not None
-        except Exception as e:
-            st.error(f"Erro ao autenticar: {e}")
-        finally:
-            conn.close()
+            # Verifica se o cookie ainda é válido
+            st.session_state['authenticated'] = True
+            st.session_state['username'] = auth_cookie['username']
+            st.session_state['last_activity'] = datetime.now()
+            return True
+        except:
+            return False
+    
     return False
+
+
 
 # Verificação de autenticação
 def check_authentication():
@@ -81,22 +101,24 @@ def check_authentication():
 
 # Página de Login
 def login_page():
-    st.title("Login")
+    st.title("Sistema de Controle - Login")
     with st.form("login_form"):
         username = st.text_input("Usuário")
         password = st.text_input("Senha", type="password")
         
         if st.form_submit_button("Login"):
             if authenticate_user(username, password):
+                # Cookie expira em 5 minutos (300 segundos)
                 cookie_manager.set(
-                                   'auth',
-                                   {'username': username},
-                                   expires_at=datetime.now() + timedelta(days=1))
+                    'auth',
+                    {'username': username},
+                    expires_at=datetime.now() + timedelta(minutes=5)
+                )
                 st.session_state.update({
-                                         'authenticated': True,
-                                         'username': username
-                                        })
-                                  
+                    'authenticated': True,
+                    'username': username,
+                    'last_activity': datetime.now()
+                })
                 st.rerun()
             else:
                 st.error("Credenciais inválidas")
@@ -276,16 +298,16 @@ def processos_page():
 # Função principal
 def main():
     load_css()
-    # Verifica redirecionamento de logout
-    if st.session_state.get('redirect_to_login', False):
-        st.session_state.pop('redirect_to_login', None)
-        login_page()
-        return  # Importante para evitar execução dupla
-    check_authentication()    
-    if st.session_state.get('authenticated'):
+    
+    # Verifica autenticação
+    is_authenticated = check_authentication()
+    
+    if is_authenticated:
         main_menu()
     else:
         login_page()
+
+
 
 if __name__ == "__main__":
     # 4. Ponto de entrada principal
