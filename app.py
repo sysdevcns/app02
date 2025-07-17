@@ -1,6 +1,5 @@
 # pip install extra-streamlit-components
 import os
-#import pyodbc
 import psycopg2
 import streamlit as st
 from datetime import datetime, timedelta
@@ -35,9 +34,9 @@ def load_css():
         """
         st.markdown(w3schools_css, unsafe_allow_html=True)
 
-
+# Conexão Postgre
 def get_db_connection():
-    db_url = os.getenv('DATABASE_URL')  # URL no formato: postgresql://user:pass@host:port/db
+    db_url = os.getenv('DATABASE_URL')
     if not db_url:
         st.error("Variável DATABASE_URL não encontrada!")
         return None
@@ -47,7 +46,7 @@ def get_db_connection():
         conn = psycopg2.connect(
             host=url.hostname,
             port=url.port,
-            database=url.path[1:],  # Remove a barra inicial (ex: "/mydb" -> "mydb")
+            database=url.path[1:],
             user=url.username,
             password=url.password
         )
@@ -56,21 +55,6 @@ def get_db_connection():
         st.error(f"Erro ao conectar: {e}")
         return None
 
-
-# Conexão com o SQL Server
-def get_db_connection2():
-    try:
-        conn = pyodbc.connect(
-            f"DRIVER={{ODBC Driver 17 for SQL Server}};"
-            f"SERVER={os.getenv('DB_SERVER')},{os.getenv('DB_PORT', '1433')};"
-            f"DATABASE={os.getenv('DB_NAME')};"
-            f"UID={os.getenv('DB_USER')};"
-            f"PWD={os.getenv('DB_PASSWORD')}"
-        )
-        return conn
-    except Exception as e:
-        st.error(f"Erro ao conectar ao banco de dados: {e}")
-        return None
 
 # Autenticação
 def authenticate_user(username, password):
