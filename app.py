@@ -58,7 +58,7 @@ def authenticate_user(username, password):
         try:
             cursor = conn.cursor()
             cursor.execute(
-                "SELECT * FROM Users WHERE Username = ? AND Password = ?", 
+                "SELECT * FROM Users WHERE Username = %s AND Password = %s", 
                 (username, password)
             )
             return cursor.fetchone() is not None
