@@ -156,9 +156,12 @@ def processos_page():
                 processos = cursor.fetchall()
                 
                 # Exibe como dataframe
-                df = pd.DataFrame(processos, columns=[desc[0] for desc in cursor.description])
-                st.dataframe(df, use_container_width=True)
-                
+                if processos:
+                    df = pd.DataFrame(processos, columns=[desc[0] for desc in cursor.description])
+                    st.dataframe(df, use_container_width=True, height=400)
+                else:
+                    st.info("Nenhum processo cadastrado ainda.")
+
                 # Botão para adicionar novo processo
                 if st.button("➕ Adicionar Processo"):
                     st.session_state['show_processo_modal'] = True
@@ -167,83 +170,88 @@ def processos_page():
                 # Modal para edição/criação
                 if st.session_state.get('show_processo_modal'):
                     with st.form(key='processo_form'):
-                        st.subheader("Editar Processo" if st.session_state.get('current_processo') else "Novo Processo")
+                        st.subheader("📝 Editar Processo" if st.session_state.get('current_processo') else "🆕 Novo Processo")
                         
                         # Campos do formulário
-                        numero = st.text_input("Número do Processo", 
+                        numero = st.text_input("Número do Processo*", 
                                              value=st.session_state.get('current_processo', {}).get('NumeroProcesso', ''))
-                        titulo = st.text_input("Título", 
+                        titulo = st.text_input("Título*", 
                                              value=st.session_state.get('current_processo', {}).get('Titulo', ''))
                         descricao = st.text_area("Descrição", 
                                                value=st.session_state.get('current_processo', {}).get('Descricao', ''))
-                        status = st.selectbox("Status", 
+                        status = st.selectbox("Status*", 
                                             options=['Pendente', 'Em Andamento', 'Concluído', 'Cancelado'],
                                             index=['Pendente', 'Em Andamento', 'Concluído', 'Cancelado'].index(
                                                 st.session_state.get('current_processo', {}).get('Status', 'Pendente')))
                         
                         col1, col2 = st.columns(2)
-                        data_inicio = col1.date_input("Data Início", 
-                                                     value=pd.to_datetime(st.session_state.get('current_processo', {}).get('DataInicio', datetime.now())))
+                        data_inicio = col1.date_input("Data Início*", 
+                                                    value=pd.to_datetime(st.session_state.get('current_processo', {}).get('DataInicio', datetime.now())))
+                        
+                        # Corrigindo o parêntese não fechado aqui:
+                        data_fim_value = st.session_state.get('current_processo', {}).get('DataFim')
                         data_fim = col2.date_input("Data Fim (opcional)", 
-                                                  value=pd.to_datetime(st.session_state.get('current_processo', {}).get('DataFim', None))
+                                                  value=pd.to_datetime(data_fim_value) if data_fim_value else None)
                         
                         # Botões do formulário
-                        submitted = st.form_submit_button("Salvar")
-                        if submitted:
-                            # Lógica para salvar no banco de dados
-                            try:
-                                if st.session_state.get('current_processo'):
-                                    # Atualizar processo existente
-                                    cursor.execute("""
-                                        UPDATE Processos 
-                                        SET NumeroProcesso = %s, Titulo = %s, Descricao = %s, 
-                                            Status = %s, DataInicio = %s, DataFim = %s
-                                        WHERE ProcessoID = %s
-                                    """, (numero, titulo, descricao, status, data_inicio, data_fim, 
-                                          st.session_state['current_processo']['ProcessoID']))
-                                else:
-                                    # Criar novo processo
-                                    cursor.execute("""
-                                        INSERT INTO Processos 
-                                        (NumeroProcesso, Titulo, Descricao, Status, DataInicio, DataFim)
-                                        VALUES (%s, %s, %s, %s, %s, %s)
-                                    """, (numero, titulo, descricao, status, data_inicio, data_fim))
-                                
-                                conn.commit()
-                                st.success("Processo salvo com sucesso!")
-                                st.session_state['show_processo_modal'] = False
-                                st.rerun()
-                            except Exception as e:
-                                st.error(f"Erro ao salvar processo: {e}")
+                        col1, col2 = st.columns(2)
+                        if col1.form_submit_button("💾 Salvar"):
+                            if not numero or not titulo:
+                                st.error("Campos obrigatórios (*) devem ser preenchidos")
+                            else:
+                                try:
+                                    if st.session_state.get('current_processo'):
+                                        cursor.execute("""
+                                            UPDATE Processos 
+                                            SET NumeroProcesso = %s, Titulo = %s, Descricao = %s, 
+                                                Status = %s, DataInicio = %s, DataFim = %s
+                                            WHERE ProcessoID = %s
+                                        """, (numero, titulo, descricao, status, data_inicio, data_fim, 
+                                              st.session_state['current_processo']['ProcessoID']))
+                                    else:
+                                        cursor.execute("""
+                                            INSERT INTO Processos 
+                                            (NumeroProcesso, Titulo, Descricao, Status, DataInicio, DataFim)
+                                            VALUES (%s, %s, %s, %s, %s, %s)
+                                        """, (numero, titulo, descricao, status, data_inicio, data_fim))
+                                    
+                                    conn.commit()
+                                    st.success("Processo salvo com sucesso!")
+                                    st.session_state['show_processo_modal'] = False
+                                    st.experimental_rerun()
+                                except Exception as e:
+                                    st.error(f"Erro ao salvar processo: {e}")
                         
-                        if st.form_submit_button("Cancelar"):
+                        if col2.form_submit_button("❌ Cancelar"):
                             st.session_state['show_processo_modal'] = False
                 
                 # Adiciona botões de ação para cada processo
-                st.write("## Ações")
-                for processo in processos:
-                    with st.expander(f"Processo {processo[1]} - {processo[2]}"):
-                        col1, col2 = st.columns(2)
-                        if col1.button(f"✏️ Editar", key=f"edit_{processo[0]}"):
-                            st.session_state['show_processo_modal'] = True
-                            st.session_state['current_processo'] = {
-                                'ProcessoID': processo[0],
-                                'NumeroProcesso': processo[1],
-                                'Titulo': processo[2],
-                                'Descricao': processo[3],
-                                'Status': processo[4],
-                                'DataInicio': processo[5],
-                                'DataFim': processo[6]
-                            }
-                        
-                        if col2.button(f"🗑️ Excluir", key=f"del_{processo[0]}"):
-                            try:
-                                cursor.execute("DELETE FROM Processos WHERE ProcessoID = %s", (processo[0],))
-                                conn.commit()
-                                st.success(f"Processo {processo[1]} excluído!")
-                                st.rerun()
-                            except Exception as e:
-                                st.error(f"Erro ao excluir: {e}")
+                if processos:
+                    st.write("## Ações")
+                    for processo in processos:
+                        with st.expander(f"🔹 {processo[1]} - {processo[2]}"):
+                            col1, col2, col3 = st.columns([1,1,2])
+                            if col1.button(f"✏️ Editar", key=f"edit_{processo[0]}"):
+                                st.session_state['show_processo_modal'] = True
+                                st.session_state['current_processo'] = {
+                                    'ProcessoID': processo[0],
+                                    'NumeroProcesso': processo[1],
+                                    'Titulo': processo[2],
+                                    'Descricao': processo[3],
+                                    'Status': processo[4],
+                                    'DataInicio': processo[5],
+                                    'DataFim': processo[6]
+                                }
+                                st.experimental_rerun()
+                            
+                            if col2.button(f"🗑️ Excluir", key=f"del_{processo[0]}"):
+                                try:
+                                    cursor.execute("DELETE FROM Processos WHERE ProcessoID = %s", (processo[0],))
+                                    conn.commit()
+                                    st.success(f"Processo {processo[1]} excluído!")
+                                    st.experimental_rerun()
+                                except Exception as e:
+                                    st.error(f"Erro ao excluir: {e}")
                 
         except Exception as e:
             st.error(f"Erro ao carregar processos: {e}")
